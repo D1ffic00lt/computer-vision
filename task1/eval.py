@@ -3,6 +3,7 @@ import math
 
 import cv2
 
+
 # TODO: Допишите импорт библиотек, которые собираетесь использовать
 
 
@@ -25,7 +26,6 @@ def detect_defective_parts(video) -> list:
             [] - на видео не было гаек
 
     """
-
     # TODO: Отредактируйте эту функцию по своему усмотрению.
     # Для удобства можно создать собственные функции в этом файле.
     # Алгоритм проверки будет вызывать функцию detect_defective_parts, остальные функции должны вызываться из неё.
@@ -38,7 +38,8 @@ def detect_defective_parts(video) -> list:
         if not status:  # выходим из цикла, если видео закончилось
             break
         frame = cv2.resize(frame, (640, 360))
-        frame = frame[315:, :]
+        frame = frame[320:, :]
+        # print(frame.shape)
         frame = cv2.blur(frame, (2, 2), 1)
 
         binary = cv2.inRange(frame, (80, 80, 80), (210, 210, 210))
@@ -48,7 +49,7 @@ def detect_defective_parts(video) -> list:
             if len(contours) > 3:
                 i = 0
             if contours:
-                cv2.drawContours(frame, contours, -1, (0, 255, 0))
+                # cv2.drawContours(frame, contours, -1, (0, 255, 0))
                 # key = cv2.waitKey(100000)
                 # if key == 27:
                 #     break
@@ -66,19 +67,22 @@ def detect_defective_parts(video) -> list:
                         i = 0
                     double = False
 
+                # rect = cv2.minAreaRect(contours[0])
+                # box = np.int0(cv2.boxPoints(rect))
+                # cv2.drawContours(frame, [box], -1, (0, 255, 0), 1)
+                # print()
                 if per > 60 and i == 0 and not double:
-                    apd = cv2.approxPolyDP(contours[0], 0.035 * per, True)
-                    a = math.sqrt(
-                            pow(
-                                apd[1][0][0] - apd[0][0][0], 2
-                            ) + pow(
-                                apd[1][0][1] - apd[0][0][1], 2
-                            )
+                    apd = cv2.approxPolyDP(contours[0], 0.03 * per, True)
+                    p = math.sqrt(
+                        pow(
+                            apd[1][0][0] - apd[0][0][0], 2
+                        ) + pow(
+                            apd[1][0][1] - apd[0][0][1], 2
                         )
-                    # print(len(contours))
-                    if len(contours) != 2:
+                    ) * 6
+                    if len(contours) == 1:
                         result.append(1)
-                    elif abs(area - 600) < 50 and abs(per - 90) < 7 and abs(a * 6 - per) < 30:
+                    elif abs(area - 600) < 50 and abs(per - 90) < 7 and abs(p - per) < 40:
                         result.append(0)
                     else:
                         result.append(1)
@@ -90,7 +94,7 @@ def detect_defective_parts(video) -> list:
 
         # cv2.imshow("Binary", binary)
         # cv2.imshow("Frame", frame)
-        # key = cv2.waitKey(5)
+        # key = cv2.waitKey(10)
         # if key == 27:
         #     break
 
