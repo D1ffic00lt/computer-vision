@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import math
-
+import pickle
 import cv2
+import numpy as np
 
 
 # TODO: Допишите импорт библиотек, которые собираетесь использовать
+
+def calculate_area(a: float):
+    return ((3 * math.sqrt(3)) / 2) * a
 
 
 def detect_defective_parts(video) -> list:
@@ -29,7 +33,8 @@ def detect_defective_parts(video) -> list:
     # TODO: Отредактируйте эту функцию по своему усмотрению.
     # Для удобства можно создать собственные функции в этом файле.
     # Алгоритм проверки будет вызывать функцию detect_defective_parts, остальные функции должны вызываться из неё.
-
+    with open("model3.pkl", "rb") as file:
+        model = pickle.load(file)
     i = 0
     result = []  # пустой список для засенения результата
     double = False
@@ -49,7 +54,7 @@ def detect_defective_parts(video) -> list:
             if len(contours) > 3:
                 i = 0
             if contours:
-                # cv2.drawContours(frame, contours, -1, (0, 255, 0))
+                cv2.drawContours(frame, contours, -1, (0, 255, 0))
                 # key = cv2.waitKey(100000)
                 # if key == 27:
                 #     break
@@ -71,22 +76,48 @@ def detect_defective_parts(video) -> list:
                 # box = np.int0(cv2.boxPoints(rect))
                 # cv2.drawContours(frame, [box], -1, (0, 255, 0), 1)
                 # print()
+                # print(per)
                 if per > 60 and i == 0 and not double:
+                    # if per > 60:
                     apd = cv2.approxPolyDP(contours[0], 0.03 * per, True)
-                    p = math.sqrt(
+                    a = math.sqrt(
                         pow(
                             apd[1][0][0] - apd[0][0][0], 2
                         ) + pow(
                             apd[1][0][1] - apd[0][0][1], 2
                         )
-                    ) * 6
-                    if len(contours) == 1:
+                    )
+                    if len(contours) != 2:
                         result.append(1)
-                    elif abs(area - 600) < 50 and abs(per - 90) < 7 and abs(p - per) < 40:
+                        print(len(contours), len(apd), per, area, 0, 0, 1)
+                    elif abs(area - 600) < 50 and abs(per - 90) < 7 and abs(a * 6 - per) < 40:
                         result.append(0)
+                        print(len(contours), len(apd), per, area, cv2.contourArea(contours[1]), cv2.arcLength(contours[1], True), 0)
                     else:
                         result.append(1)
+                        print(len(contours), len(apd), per, area, cv2.contourArea(contours[1]), cv2.arcLength(contours[1], True), 1)
                     i = 1
+                    # apd = cv2.approxPolyDP(contours[0], 0.03 * per, True)
+                    # a = math.sqrt(
+                    #         pow(
+                    #             apd[1][0][0] - apd[0][0][0], 2
+                    #         ) + pow(
+                    #             apd[1][0][1] - apd[0][0][1], 2
+                    #         )
+                    #     )
+                    # if len(contours) != 2:
+                    #     result.append(
+                    #         int(model.predict(np.array([[len(contours), per, area, a, a * 6, calculate_area(a), len(apd), 0, 0]], dtype=np.float16))[0])
+                    #     )
+                    # else:
+                    #     # FIXME: ужас...
+                    #     result.append(int(model.predict(np.array(
+                    #         [[
+                    #             len(contours), per, area, a, a * 6, calculate_area(a), len(apd),
+                    #             cv2.contourArea(contours[1]), cv2.arcLength(contours[1], True)
+                    #         ]], dtype=np.float16
+                    #     ))[0]))
+                    # i = 1
             else:
                 i = 0
         else:
