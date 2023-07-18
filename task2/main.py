@@ -4,13 +4,9 @@
 
 Для получения оценки точности, запустите файл на исполнение
 """
-import dlib as dlib
-
 import eval as submission
 import cv2
 import pandas as pd
-
-dlib.train_simple_object_detector(training_xml_path, "detector.svm", options)
 
 DETECTION_THRESHOLD = 0.5
 
