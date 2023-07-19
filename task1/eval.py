@@ -1,10 +1,29 @@
 # -*- coding: utf-8 -*-
 import pickle
 import cv2
-import numpy as np
 
 
 # TODO: Допишите импорт библиотек, которые собираетесь использовать
+
+def intersection(user_box, true_box):
+    x, y, w, h = user_box
+    user_box = (x, y, x + w, y + h)
+
+    x, y, w, h = true_box
+    true_box = (x, y, x + w, y + h)
+
+    x1 = max(user_box[0], true_box[0])
+    y1 = max(user_box[1], true_box[1])
+    x2 = min(user_box[2], true_box[2])
+    y2 = min(user_box[3], true_box[3])
+
+    inter_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+
+    box1_area = (user_box[2] - user_box[0] + 1) * (user_box[3] - user_box[1] + 1)
+    box2_area = (true_box[2] - true_box[0] + 1) * (true_box[3] - true_box[1] + 1)
+    iou = inter_area / float(box1_area + box2_area - inter_area)
+    return not (iou == 0)
+
 
 def detect_defective_parts(video) -> list:
     """
@@ -31,6 +50,7 @@ def detect_defective_parts(video) -> list:
     with open("model4.pkl", "rb") as file:
         model = pickle.load(file)
     i = 0
+    nuts = {}
     result = []  # пустой список для засенения результата
     double = False
     while True:  # цикл чтения кадров из видео
@@ -38,54 +58,31 @@ def detect_defective_parts(video) -> list:
         if not status:  # выходим из цикла, если видео закончилось
             break
         frame = cv2.resize(frame, (640, 360))
-        frame = frame[320:, :]
-        frame = cv2.blur(frame, (2, 2), 1)
+        frame = frame[:, 70:-70]
+        h, w = frame.shape[:2]
+        frame = cv2.flip(frame, 0)
+        frame = cv2.GaussianBlur(frame, (3, 3), 1)
 
-        binary = cv2.inRange(frame, (80, 80, 80), (210, 210, 210))
-        contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        start_zone = int(h * 0.25)
+        end_zone = int(h * 0.75)
+
+        binary = cv2.inRange(frame, (0, 0, 0), (100, 100, 100))
+        contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(frame, contours, -1, (255, 0, 0), 2)
         if contours:
-            contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:]
-            if len(contours) > 3:
-                i = 0
-            if contours:
-                cv2.drawContours(frame, contours, -1, (0, 255, 0), 1)
-                area = cv2.contourArea(contours[0])
-                per = cv2.arcLength(contours[0], True)
-                count = 0
-                for contour in contours:
-                    if cv2.arcLength(contour, True) < 60:
-                        count += 1
-                if count >= 2:
-                    double = True
+            # contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:]
+            for i in contours:
+                bbox_x, bbox_y, bbox_w, bbox_h = cv2.boundingRect(i)
+                if bbox_y >= start_zone and bbox_y + bbox_h < end_zone:
+                    cv2.rectangle(frame, (bbox_x, bbox_y), (bbox_x + bbox_w, bbox_y + bbox_h), (255, 0, 0), 1)
                 else:
-                    if double:
-                        i = 0
-                    double = False
+                    cv2.rectangle(frame, (bbox_x, bbox_y), (bbox_x + bbox_w, bbox_y + bbox_h), (0, 255, 0), 1)
 
-                if per > 60 and i == 0 and not double:
-                    apd = cv2.approxPolyDP(contours[0], 0.03 * per, True)
-                    if len(contours) != 2:
-                        result.append(
-                            int(model.predict(np.array(
-                                [[len(contours), len(apd), per, area, 0, 0]],
-                                dtype=np.float16)
-                            )[0])
-                        )
-                    else:
-                        # FIXME: ужас...
-                        result.append(int(model.predict(np.array(
-                            [[
-                                len(contours), len(apd), per, area,
-                                cv2.contourArea(contours[1]), cv2.arcLength(contours[1], True)
-                            ]], dtype=np.float16
-                        ))[0]))
-                    i = 1
-            else:
-                i = 0
-        else:
-            i = 0
+        cv2.line(frame, (0, start_zone), (w, start_zone), (0, 0, 255), 1)
+        cv2.line(frame, (0, end_zone), (w, end_zone), (0, 0, 255), 1)
         cv2.imshow("Frame", frame)
-        key = cv2.waitKey(50)
+        cv2.imshow("python_binary", binary)
+        key = cv2.waitKey(10)
         if key == 27:
             break
     return result  # возвращаем полученный список
