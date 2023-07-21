@@ -30,7 +30,7 @@ def check_answer(real_answer: list, user_answer: list) -> int:
 def main():
     csv_file = "annotations.csv"
     data = pd.read_csv(csv_file, sep=',', dtype=str)
-    # data = data.sample(frac=1
+    # data = data.sample(frac=1)
     total_correct = 0
     total_object = 0
     total_wrong = 0
