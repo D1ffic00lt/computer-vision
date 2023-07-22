@@ -34,7 +34,7 @@ def detect_logo(image) -> Tuple[str, Tuple]:
     label = "avt"
     bbox = (233, 341, 372, 279)
     binary = cv2.inRange(image, (90, 90, 90), (210, 210, 210))
-    cv2.imshow("binary", binary)
+    cv2.imshow("python_binary", binary)
 
     cv2.waitKey(10000)
     contours = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[0]

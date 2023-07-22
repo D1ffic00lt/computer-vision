@@ -1,0 +1,26 @@
+<annotation>
+	<folder>images</folder>
+	<filename>46a2d46c-0345-4c5a-a2d9-6a798e3d334c.jpg</filename>
+	<path>/Users/d1ffic00lt/Documents/projects/computer-vision/task2/images/46a2d46c-0345-4c5a-a2d9-6a798e3d334c.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>avt</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>853</xmin>
+			<ymin>8</ymin>
+			<xmax>1257</xmax>
+			<ymax>322</ymax>
+		</bndbox>
+	</object>
+</annotation>
