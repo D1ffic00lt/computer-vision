@@ -2,5 +2,9 @@
 **.idea/
 *.mp4
 *.zip
-**__pycache__/
+**/__pycache__/
+**/catboost_info/
 *.pkl
+*.jpg
+*.jpeg
+*.png

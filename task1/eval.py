@@ -66,7 +66,7 @@ def detect_defective_parts(video) -> list:
     # TODO: Отредактируйте эту функцию по своему усмотрению.
     # Для удобства можно создать собственные функции в этом файле.
     # Алгоритм проверки будет вызывать функцию detect_defective_parts, остальные функции должны вызываться из неё.
-    with open("model5.pkl", "rb") as file:
+    with open("model7.pkl", "rb") as file:
         model = pickle.load(file)
 
     nuts: Dict[int, Nut] = {}
@@ -80,21 +80,16 @@ def detect_defective_parts(video) -> list:
         frame = cv2.flip(frame, 0)
         frame = cv2.GaussianBlur(frame, (3, 3), 1)
 
-        start_zone = int(h * 0.25)
-        end_zone = int(h * 0.75)
+        start_zone = int(h * 0.4)
+        end_zone = int(h * 0.6)
 
         binary = cv2.inRange(frame, (0, 0, 0), (100, 100, 100))
         contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(frame, contours, -1, (255, 0, 0), 2)
+
         if contours:
-            # contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:]
             for i in contours:
                 bbox_x1, bbox_y1, bbox_w, bbox_h = cv2.boundingRect(i)
                 bbox_x2, bbox_y2 = bbox_x1 + bbox_w, bbox_y1 + bbox_h
-                if bbox_y2 > start_zone and bbox_y1 < end_zone:
-                    cv2.rectangle(frame, (bbox_x1, bbox_y1), (bbox_x2, bbox_y2), (255, 0, 0), 1)
-                else:
-                    cv2.rectangle(frame, (bbox_x1, bbox_y1), (bbox_x2, bbox_y2), (0, 255, 0), 1)
 
                 nut_id = None
                 for old_nut_id, old_bbox in nuts.items():
@@ -111,12 +106,11 @@ def detect_defective_parts(video) -> list:
                     if nuts[nut_id].prediction == -1:
                         nut = binary[bbox_y1 - 10:bbox_y2 + 10, bbox_x1 - 10:bbox_x2 + 10]
                         nut_contours, _ = cv2.findContours(nut, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                        # cv2.drawContours(frame, nut_contours, -1, (255, 255, 0), 4)
-                        # nut_contours = sorted(nut_contours, key=cv2.contourArea, reverse=True)[1:]
+
                         if nut_contours:
                             area = cv2.contourArea(nut_contours[0])
                             per = cv2.arcLength(nut_contours[0], True)
-                            apd = cv2.approxPolyDP(nut_contours[0], 0.03 * per, True)
+                            apd = cv2.approxPolyDP(nut_contours[0], 0.04 * per, True)
                             try:
                                 nuts[nut_id].prediction = int(model.predict(np.array(
                                     [[
@@ -125,6 +119,7 @@ def detect_defective_parts(video) -> list:
                                     ]],
                                     dtype=np.float16)
                                 )[0])
+
                             except IndexError:
                                 nuts[nut_id].prediction = int(model.predict(np.array(
                                     [[
@@ -136,12 +131,5 @@ def detect_defective_parts(video) -> list:
                 if nut_id is not None and bbox_y1 >= end_zone:
                     nuts[nut_id].set_position(-1, -1, -1, -1)
 
-        cv2.line(frame, (0, start_zone), (w, start_zone), (0, 0, 255), 1)
-        cv2.line(frame, (0, end_zone), (w, end_zone), (0, 0, 255), 1)
-        # cv2.imshow("Frame", frame)
-        # cv2.imshow("python_binary", binary)
-        # key = cv2.waitKey(10)
-        # if key == 27:
-        #     break
     result = [i.prediction for i in nuts.values()]
     return result  # возвращаем полученный список
