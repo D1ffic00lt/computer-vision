@@ -3,11 +3,10 @@ import os
 import dlib
 import xml.etree.ElementTree as pars
 
+path = r"./"
 
-path = r"/Users/d1ffic00lt/Documents/projects/computer-vision/task2/"
-
-images = []
-anot = []
+images = {"cpp": [], "python": [], "kruzhok": [], "altair": [], "avt": []}
+anot = {"cpp": [], "python": [], "kruzhok": [], "altair": [], "avt": []}
 
 images_names_list = os.listdir(path + "images/")
 # print(images_names_list)
@@ -32,15 +31,19 @@ for file in images_names_list:
 
         source_image = image.copy()
         cv2.rectangle(source_image, (x1, y1), (x2, y2), (0, 200, 0))
-        cv2.imshow("image", source_image)
-        cv2.waitKey(0)
+        # cv2.imshow("image", source_image)
+        # cv2.waitKey(0)
 
-        images.append(image)
-        anot.append([dlib.rectangle(left=x1, top=y1, right=x2, bottom=y2)])
+        images[value.find("name").text].append(image)
+        anot[value.find("name").text].append([dlib.rectangle(left=x1, top=y1, right=x2, bottom=y2)])
 
-options = dlib.simple_object_detector_training_options()
-options.be_verbose = True
-detector = dlib.train_simple_object_detector(images, anot, options)
+for i in anot.keys():
+    options = dlib.simple_object_detector_training_options()
+    options.add_left_right_image_flips = False
+    options.C = 5
+    options.num_threads = 3
+    options.be_verbose = True
+    detector = dlib.train_simple_object_detector(images[i], anot[i], options)
 
-detector.save("Detector.svm")
-print("Detector saved")
+    detector.save(f"Detector_{i}.svm")
+    print(f"{i} Detector saved")
