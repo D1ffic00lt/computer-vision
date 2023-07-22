@@ -1,0 +1,26 @@
+<annotation>
+	<folder>images</folder>
+	<filename>5c9f4c56-6f40-45ac-a9f3-c4759b94687c.jpg</filename>
+	<path>/Users/d1ffic00lt/Documents/projects/computer-vision/task2/images/5c9f4c56-6f40-45ac-a9f3-c4759b94687c.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>python</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>863</xmin>
+			<ymin>35</ymin>
+			<xmax>1156</xmax>
+			<ymax>336</ymax>
+		</bndbox>
+	</object>
+</annotation>
