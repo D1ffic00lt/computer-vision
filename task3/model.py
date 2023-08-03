@@ -1,7 +1,4 @@
 import torch.nn as nn
-import torchvision.transforms as transforms
-from sklearn.preprocessing import LabelEncoder
-from torch.utils.data import Dataset
 
 
 class SimpleCnn(nn.Module):
@@ -62,25 +59,3 @@ class SimpleCnn(nn.Module):
         x = x.view(x.size(0), -1)
         logits = self.out(x)
         return logits
-
-
-RESCALE_SIZE = 50
-
-
-class ImagesDataset(Dataset):
-    def __init__(self, file):
-        super().__init__()
-        self.file = file
-
-    def __len__(self):
-        return 1
-
-    def __getitem__(self, index):
-        transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Resize(size=(RESCALE_SIZE, RESCALE_SIZE)),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-
-            ])
-        x = transform(self.file)
-        return x

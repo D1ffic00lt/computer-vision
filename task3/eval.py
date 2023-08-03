@@ -6,7 +6,8 @@ import torch
 
 from sklearn.preprocessing import LabelEncoder
 
-from model import SimpleCnn, ImagesDataset
+from model import SimpleCnn
+from dataloader import ImagesDataset
 
 warnings.filterwarnings("ignore")
 
