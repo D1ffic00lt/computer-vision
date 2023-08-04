@@ -97,4 +97,3 @@ def predict_sign(image, models) -> str:
     # label = interpreter_output(output) # интерпретируйте вывод модели и получите тесктовое название знака
     return str([encoder.classes_[i] for i in output][0])
 
-    # return 'stop'

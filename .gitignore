@@ -1,11 +1,13 @@
-*.DS_Store
-**.idea/
-*.mp4
-*.zip
+**/.idea/
 **/__pycache__/
 **/catboost_info/
+**/model/
 *.pkl
 *.jpg
 *.jpeg
 *.png
 *.pth
+*.bf
+*.mp4
+*.zip
+*.DS_Store
