@@ -1,3 +1,4 @@
+import cv2
 import pandas as pd
 
 from tqdm import tqdm
@@ -6,4 +7,7 @@ data = pd.read_csv("annotations.csv")
 
 for i in tqdm(data.values):
     with open(f"{i[0].split('.')[:1][0] + '.txt'}", "+w") as file:
-        file.write(" ".join(["light", str(i[1]), str(i[2]), str(i[3]), str(i[4])]))
+        img = cv2.imread(i[0])
+        h, w = img.shape[:2]
+        x, y, rw, rh = i[1], i[2], i[3], i[4]
+        file.write(" ".join(["0", str(x / w), str(y / h), str(rw / w), str(rh / h)]))

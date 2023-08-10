@@ -2,7 +2,7 @@
 from typing import Tuple
 
 import cv2
-import numpy as np
+
 # TODO: Допишите импорт библиотек, которые собираетесь использовать
 
 
@@ -21,17 +21,16 @@ def load_models():
 
     # Пример загрузки моделей из файлов
     # Yolo-модели
-    # net = cv2.dnn.readNetFromDarknet('yolo.cfg', 'yolo.weights')
-    # yolo_model = cv2.dnn_DetectionModel(net)
-    # yolo_model.setInputParams(scale=1/255, size=(416, 416), swapRB=True)
-    # models = [yolo_model]
+    net = cv2.dnn.readNetFromDarknet('yolov4-tiny-obj-test.cfg', 'yolov4-tiny-obj_best-2.weights')
+    yolo_model = cv2.dnn_DetectionModel(net)
+    yolo_model.setInputParams(scale=1 / 255, size=(416, 416), swapRB=True)
+    models = [yolo_model]
 
     # Пример загрузки модели TensorFlow (не забудьте импортировать библиотеку tensorflow)
     # tf_model = tf.keras.models.load_model('model.h5')
     # models.append(tf_model)
     # models = [yolo_model]
 
-    models = []
     return models
 
 
@@ -52,16 +51,22 @@ def detect_traffic_light(image, models) -> Tuple:
 
     """
 
-  # TODO: Отредактируйте эту функцию по своему усмотрению.
+    # TODO: Отредактируйте эту функцию по своему усмотрению.
     # Для удобства можно создать собственные функции в этом файле.
     # Алгоритм проверки один раз вызовет функцию load_models
     # и для каждого тестового изображения будет вызывать функцию detect_traffic_light
     # Все остальные функции должны вызываться из вышеперечисленных.
 
-    # yolo_model = models[0]
-    # classes, scores, boxes = yolo_model.detect(image, 0.45, 0.25)
-    # bbox = boxes[0]
-    # return bbox
+    yolo_model = models[0]
+    classes, scores, boxes = yolo_model.detect(image, 0.45, 0.3)
+    print(classes, scores, boxes)
+    x, y, w, h = boxes[0]
+    # cv2.rectangle(image, (x, y), (w + x, h + y), (0, 255, 0), 1)
+    # cv2.imshow("Frame", image)
+    # cv2.waitKey(1000)
+    if len(boxes) == 0:
+        return 0, 0, 0, 0
+    return boxes[0]
 
-    bbox = (12, 23, 20, 20)
-    return bbox
+    # bbox = (12, 23, 20, 20)
+    # return bbox
