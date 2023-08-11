@@ -36,6 +36,7 @@ def IoU(user_box, true_box):
     box1_area = (user_box[2] - user_box[0] + 1) * (user_box[3] - user_box[1] + 1)
     box2_area = (true_box[2] - true_box[0] + 1) * (true_box[3] - true_box[1] + 1)
     iou = inter_area / float(box1_area + box2_area - inter_area)
+    # print(user_box, true_box)
     return iou
 
 
