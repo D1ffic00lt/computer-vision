@@ -2,6 +2,8 @@
 from typing import Tuple
 
 import cv2
+import numpy as np
+
 
 # TODO: Допишите импорт библиотек, которые собираетесь использовать
 
@@ -21,7 +23,7 @@ def load_models():
 
     # Пример загрузки моделей из файлов
     # Yolo-модели
-    net = cv2.dnn.readNetFromDarknet('yolov4-tiny-obj-test.cfg', 'yolov4-tiny-obj_best-2.weights')
+    net = cv2.dnn.readNetFromDarknet('yolov4-tiny-obj-test.cfg', 'yolov4-tiny-obj_best-3.weights')
     yolo_model = cv2.dnn_DetectionModel(net)
     yolo_model.setInputParams(scale=1 / 255, size=(416, 416), swapRB=True)
     models = [yolo_model]
@@ -59,14 +61,15 @@ def detect_traffic_light(image, models) -> Tuple:
 
     yolo_model = models[0]
     classes, scores, boxes = yolo_model.detect(image, 0.45, 0.3)
-    print(classes, scores, boxes)
-    x, y, w, h = boxes[0]
+    # print(classes, scores, boxes)
+    # x, y, w, h = boxes[0]
     # cv2.rectangle(image, (x, y), (w + x, h + y), (0, 255, 0), 1)
     # cv2.imshow("Frame", image)
     # cv2.waitKey(1000)
     if len(boxes) == 0:
         return 0, 0, 0, 0
-    return boxes[0]
+    boxes = np.array(boxes).astype(int)
+    return int(boxes[0][0]), int(boxes[0][1]), int(boxes[0][2]), int(boxes[0][3])
 
     # bbox = (12, 23, 20, 20)
     # return bbox
