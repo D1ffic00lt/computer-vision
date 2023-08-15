@@ -7,6 +7,7 @@ import numpy as np
 with open('comandsDetcet.bf', 'rb') as model:
     modelHands = pickle.load(model)
 
+
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
 mp_hands = mp.solutions.hands
@@ -67,6 +68,7 @@ while True:
             hand_landmarks = results.multi_hand_landmarks[0]
 
             gesture = catDetect(hand_landmarks.landmark)
+            print(gesture[0])
             response = requests.post("http://192.168.4.1:1354/app/api/v1.0/do/", json={"object": gesture[0]})
     else:
         break
