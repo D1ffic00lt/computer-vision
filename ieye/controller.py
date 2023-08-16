@@ -84,6 +84,8 @@ while key != 27:
         results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         annotated_image = frame.copy()
+        if not results.multi_face_landmarks:
+            continue
         face_landmarks = results.multi_face_landmarks[0]
         frame_w, frame_h = frame.shape[:2]
 
@@ -102,6 +104,7 @@ while key != 27:
             blinking.append(1)
         if len(blinking) == 25:
             value = check_list(blinking)
+            print(value)
             if value != 0:
                 response = requests.post("http://192.168.4.1:1664/app/api/v1.0/do/", json={"object": value})
             blinking = []
