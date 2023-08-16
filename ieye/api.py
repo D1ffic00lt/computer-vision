@@ -2,8 +2,10 @@ import os
 import time
 import pigpio
 
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, make_response, request, jsonify
 
+angles = iter([70, 90, 110])
+direction = False
 application = Flask(__name__)
 
 
@@ -27,20 +29,24 @@ def control(bot, esc, speed, steer, angle):
 
 
 @application.route("/app/api/v1.0/do/", methods=["POST"])
-def do_something():
+def do():
+    global direction, angles
     data = request.json
-    if data["object"] == 'forward':
-        control(pi, ESC, 1560, STEER, 90)
-    elif data["object"] == 'back':
-        control(pi, ESC, 1430, STEER, 90)
-    elif data["object"] == "left":
-        control(pi, ESC, 1500, STEER, 110)
-    elif data["object"] == "right":
-        control(pi, ESC, 1500, STEER, 72)
-    elif data["object"] == "stop":
-        control(pi, ESC, 1500, STEER, 90)
+    if data["object"] == 1:
+        if direction:
+            control(pi, ESC, 1500, STEER, 90)
+        else:
+            control(pi, ESC, 1560, STEER, 90)
+        direction = not direction
+    else:
+        value = next(angles, -1)
+        if value == -1:
+            angles = iter([70, 90, 110])
+            value = next(angles)
+        control(pi, ESC, 1500, STEER, value)
+
     return make_response(jsonify({"status": True}), 201)
 
 
 if __name__ == "__main__":
-    application.run("0.0.0.0", port=1354)
+    application.run(host="0.0.0.0", port=1664)
