@@ -6,12 +6,14 @@
 ### Nut defect detection (product quality control)
 The video shows the movement of nuts along the conveyor. The nuts move from the lower border of the frame to the upper one. Among the nuts there are defective ones, they are deformed and have distorted contours. For each nut captured on video, it is necessary to determine compliance with quality standards.
 
-The 97% accuracy solution is presented in folder [task1](task1)
+The 97% accuracy solution is presented in folder [task1](task1).
 ### Logo detection
 
 The image shows the logo. Your task is to write a function that determines in which part of the image the logo is located, and what it is called. Each image shows one of the five logos.
 
 Your function should return the name of the logo and the coordinates of the border bounding the logo. Correctly detected and recognized are those logos for which the name is correctly indicated and the IoU is greater than 0.5.
+
+The 98% accuracy solution is presented in folder [task2](task2).
 
 ### Classification of road signs
 
