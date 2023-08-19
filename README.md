@@ -17,6 +17,10 @@ The 98% accuracy solution is presented in folder [task2](task2).
 
 ### Classification of road signs
 
+The images show traffic signs. There is exactly one sign on each image. Your task is to write a function that determines which of the eight characters in the image.
+
+The 100% accuracy solution is presented in folder [task3](task3).
+
 ### Traffic light detection
 
 ### Hand detection
