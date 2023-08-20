@@ -23,6 +23,11 @@ The 100% accuracy solution is presented in folder [task3](task3).
 
 ### Traffic light detection
 
+The images show traffic lights. Your task is to write a function that determines in which part of the image the traffic light is located. There is only one traffic light in each image. The function should return the coordinates of the frame bounding the traffic light. Traffic lights for which IoU is greater than 0.5 are considered to be correctly detected.
+
+The 100% accuracy solution is presented in folder [task4](task4).
+
+
 ### Hand detection
 
 ### Eyes detection
