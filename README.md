@@ -30,4 +30,6 @@ The 100% accuracy solution is presented in folder [task4](task4).
 
 ### Hand detection
 
+Your task is to write a program for gesture recognition and integrate it into aikar. Possible gestures: the thumb up indicates forward movement, the thumb down indicates backward movement, the index finger to the left and to the right indicate turns to the left and to the right, respectively, and the clenched fist indicates a stop.
+
 ### Eyes detection
