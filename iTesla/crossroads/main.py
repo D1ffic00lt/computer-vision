@@ -23,6 +23,8 @@ class Controller(object):
     ESC = 17
     STEER = 18
     ESCAPE = 27
+    STOP_LINE_PIXELS_COUNT = 10000000
+    ROAD_PIXELS_COUNT = 1600000
     SIZE = (533, 300)
     RECT = np.float32([[0, SIZE[1]], [SIZE[0], SIZE[1]], [SIZE[0], 0], [0, 0]])
     TRAP = np.float32([[10, 299], [523, 299], [440, 200], [93, 200]])
@@ -31,7 +33,8 @@ class Controller(object):
     def __init__(
             self, speed: int = 1560, camera: Union[str, int] = 0,
             show_results: bool = False, control_car: bool = True,
-            show_angel: bool = False, ignore_warnings: bool = True
+            show_angel: bool = False, ignore_warnings: bool = True,
+            stop_before_stop_line: bool = False
     ) -> None:
         self.pi: Any
         self.speed = speed
@@ -46,12 +49,15 @@ class Controller(object):
         self.control_car = control_car and connect_pigpio
         self.show_angel = show_angel
         self.show_results = show_results
+        self.stop_before_stop_line = stop_before_stop_line
 
         self._angle = 90
         self._ignore_warnings: bool
         self.ignore_warnings = ignore_warnings
 
         self._camera = cv2.VideoCapture(camera)
+
+        self._in_crossroads = False
 
     def setup_gpio(self) -> Any:
         os.system("sudo pigpiod")
@@ -79,13 +85,21 @@ class Controller(object):
                 time.sleep(1)
                 continue
 
+            if self._in_crossroads:
+                if self._read_frame(frame, return_only_pixels_count=True) > self.ROAD_PIXELS_COUNT:
+                    self._in_crossroads = False
+                    continue
+                self.control(90)
+
             previous_error = total_error
 
             hist, mid, left, right, total_error, stop_line = self._read_frame(frame)
 
             if stop_line and self.control_car:
-                self.control(90)
-                time.sleep(1)
+                self._in_crossroads = True
+                if self.stop_before_stop_line:
+                    self.control(90, 1500)
+                    time.sleep(5)
                 continue
 
             self.angel = self._calculate_angel(self.angel, total_error, previous_error)
@@ -103,7 +117,8 @@ class Controller(object):
         return angel - int(self.P * (total_error + (total_error - previous_error) * self.D))
 
     def _read_frame(
-            self, frame: np.ndarray, return_only_error: bool = False
+            self, frame: np.ndarray, return_only_error: bool = False,
+            return_only_pixels_count: bool = False
     ) -> Tuple[np.ndarray, int, int, int, Union[int, float], bool]:
         stop_line = False
         img = cv2.resize(frame, self.SIZE)
@@ -136,10 +151,21 @@ class Controller(object):
 
             cv2.imshow('lines', perspective)
 
+        if return_only_pixels_count:
+            return np.sum(perspective)
+        print(np.sum(perspective))
         if np.sum(perspective) > 10000000:
             stop_line = True
 
         return hist, mid, left, right, total_error, stop_line
+
+    @property
+    def camera(self):
+        return self._camera
+
+    @camera.setter
+    def camera(self, value: Union[int, str]):
+        self._camera = cv2.VideoCapture(value)
 
     @property
     def angel(self) -> int:
@@ -176,5 +202,8 @@ class Controller(object):
 
 
 if __name__ == "__main__":
-    controller = Controller(camera="../output1280.avi", show_results=True, show_angel=True)
+    controller = Controller()
+    controller.camera = "../output1280.avi"
+    controller.show_results = True
+    controller.show_angel = True
     controller()
