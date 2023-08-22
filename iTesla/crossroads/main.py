@@ -31,7 +31,7 @@ class Controller(object):
     SRC_DRAW = np.array(TRAP, dtype=np.int32)
 
     def __init__(
-            self, speed: int = 1560, camera: Union[str, int] = 0,
+            self, camera: Union[str, int] = 0, speed: int = 1550,
             show_results: bool = False, control_car: bool = True,
             show_angel: bool = False, ignore_warnings: bool = True,
             stop_before_stop_line: bool = False
@@ -202,7 +202,7 @@ class Controller(object):
 
 
 if __name__ == "__main__":
-    controller = Controller()
+    controller = Controller("../output1280.avi")
     controller.camera = "../output1280.avi"
     controller.show_results = True
     controller.show_angel = True
