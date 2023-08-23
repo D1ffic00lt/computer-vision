@@ -33,10 +33,10 @@ class Controller(object):
     def __init__(
             self, camera: Union[str, int] = 0, speed: int = 1550,
             show_results: bool = False, control_car: bool = True,
-            show_angel: bool = False, ignore_warnings: bool = True,
+            show_angel: bool = False, ignore_warnings: bool = False,
             stop_before_stop_line: bool = False
     ) -> None:
-        self.pi: Any
+        self.pi: Any = object()
         self.speed = speed
         if connect_pigpio:
             self.pi = self.setup_gpio()
@@ -48,7 +48,7 @@ class Controller(object):
         self.stop_before_stop_line = stop_before_stop_line
 
         self._angle = 90
-        self._ignore_warnings: bool
+        self._ignore_warnings: bool = False
         self.ignore_warnings = ignore_warnings
 
         self._camera = cv2.VideoCapture(camera)
@@ -75,7 +75,9 @@ class Controller(object):
         key = 1
         while key != self.ESCAPE:
             self.angel = 90
+
             status, frame = self._camera.read()
+
             if not status:
                 print("Video stream not available")
                 time.sleep(1)
@@ -149,7 +151,7 @@ class Controller(object):
 
         if return_only_pixels_count:
             return np.sum(perspective)
-        print(np.sum(perspective))
+
         if np.sum(perspective) > 10000000:
             stop_line = True
 
