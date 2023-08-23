@@ -39,13 +39,9 @@ class Controller(object):
         self.pi: Any
         self.speed = speed
         if connect_pigpio:
-            if not control_car and not ignore_warnings:
-                logging.warning("connect_pigpio == True but control_car = False")
             self.pi = self.setup_gpio()
             self.control(90, 1500)
-        else:
-            if control_car and not ignore_warnings:
-                logging.warning("connect_pigpio == False but control_car = True")
+
         self.control_car = control_car and connect_pigpio
         self.show_angel = show_angel
         self.show_results = show_results
@@ -81,7 +77,7 @@ class Controller(object):
             self.angel = 90
             status, frame = self._camera.read()
             if not status:
-                print("No video")
+                print("Video stream not available")
                 time.sleep(1)
                 continue
 
@@ -193,6 +189,8 @@ class Controller(object):
             warnings.filterwarnings("default")
 
     def __call__(self) -> None:
+        if self.control_car and not self.ignore_warnings:
+            logging.warning("connect_pigpio == False but control_car = True")
         try:
             self._run()
         except KeyboardInterrupt:
