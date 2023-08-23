@@ -34,7 +34,7 @@ class Controller(object):
             self, camera: Union[str, int] = 0, speed: int = 1550,
             show_results: bool = False, control_car: bool = True,
             show_angel: bool = False, ignore_warnings: bool = False,
-            stop_before_stop_line: bool = False
+            stop_before_stop_line: bool = False, stop_at_traffic_light: bool = True
     ) -> None:
         self.pi: Any = object()
         self.speed = speed
@@ -46,6 +46,7 @@ class Controller(object):
         self.show_angel = show_angel
         self.show_results = show_results
         self.stop_before_stop_line = stop_before_stop_line
+        self.stop_at_traffic_light = stop_at_traffic_light
 
         self._angle = 90
         self._ignore_warnings: bool = False
@@ -84,7 +85,8 @@ class Controller(object):
                 continue
 
             if self._in_crossroads:
-                if self._read_frame(frame, return_only_pixels_count=True) > self.ROAD_PIXELS_COUNT:
+                if self.STOP_LINE_PIXELS_COUNT > \
+                        self._read_frame(frame, return_only_pixels_count=True) > self.ROAD_PIXELS_COUNT:
                     self._in_crossroads = False
                     continue
                 self.control(90)
@@ -97,7 +99,10 @@ class Controller(object):
                 self._in_crossroads = True
                 if self.stop_before_stop_line:
                     self.control(90, 1500)
-                    time.sleep(5)
+                    if not self.stop_at_traffic_light:
+                        time.sleep(5)
+                        continue
+                    self._traffic_lights_controller()
                 continue
 
             self.angel = self._calculate_angel(self.angel, total_error, previous_error)
@@ -110,6 +115,30 @@ class Controller(object):
 
             if self.show_angel:
                 print(self.angel)
+
+    def _traffic_lights_controller(self):
+        total_light = "red"
+        all_predictions = []
+
+        while total_light != "green":
+            status, frame = self._camera.read()
+
+            if not status:
+                print("Video stream not available")
+                time.sleep(0.3)
+                continue
+
+            if len(all_predictions) != 0:
+                if all_predictions.count(None) / len(all_predictions) > 0.9:
+                    break
+
+            detector_prediction = ...(frame)  # TODO: detector prediction
+
+            if not detector_prediction:
+                all_predictions.append(None)
+            total_light = ...(detector_prediction)  # TODO: model prediction
+
+            all_predictions.append(None if not total_light else total_light)
 
     def _calculate_angel(self, angel, total_error, previous_error) -> int:
         return angel - int(self.P * (total_error + (total_error - previous_error) * self.D))
@@ -204,6 +233,7 @@ class Controller(object):
 if __name__ == "__main__":
     controller = Controller("../output1280.avi")
     controller.camera = "../output1280.avi"
+    controller.stop_at_traffic_light = False  # FIXME
     controller.show_results = True
     controller.show_angel = True
     controller()
