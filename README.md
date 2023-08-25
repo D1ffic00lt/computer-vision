@@ -6,7 +6,7 @@
 ### Nut defect detection (product quality control)
 > The video shows the movement of nuts along the conveyor. The nuts move from the lower border of the frame to the upper one. Among the nuts there are defective ones, they are deformed and have distorted contours. For each nut captured on video, it is necessary to determine compliance with quality standards.
 
-![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/e5b1df0c-cb56-4f5b-aa06-cd4a6c49ee16)
+![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/929e99b8-ec18-4d43-8519-d873d24eaaf1)
 
 The 97% accuracy solution is presented in folder [folder](nut-defect-detection) .
 ### Logo detection
@@ -15,7 +15,7 @@ The 97% accuracy solution is presented in folder [folder](nut-defect-detection) 
 
 > Your function should return the name of the logo and the coordinates of the border bounding the logo. Correctly detected and recognized are those logos for which the name is correctly indicated and the IoU is greater than 0.5.
 
-![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/f88796e5-db96-4338-96e6-3e8b29b03406)
+![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/b9b194c3-671a-4301-ba72-4e4275cd3076)
 
 The 98% accuracy solution is presented in [folder](logo-detection).
 
@@ -23,14 +23,15 @@ The 98% accuracy solution is presented in [folder](logo-detection).
 
 > The images show traffic signs. There is exactly one sign on each image. Your task is to write a function that determines which of the eight characters in the image.
 
-![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/945fa1c0-3fec-446d-90a5-6b5c71b291e5)
+![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/1b3e597d-35ff-4104-9acb-b0c2f2c2bdae)
 
 The 100% accuracy solution is presented in folder [folder](classification-of-road-signs).
 
 ### Traffic light detection
 
 > The images show traffic lights. Your task is to write a function that determines in which part of the image the traffic light is located. There is only one traffic light in each image. The function should return the coordinates of the frame bounding the traffic light. Traffic lights for which IoU is greater than 0.5 are considered to be correctly detected.
-![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/f88796e5-db96-4338-96e6-3e8b29b03406)
+
+![image](https://github.com/D1ffic00lt/computer-vision/assets/69642892/483060df-dff2-4b77-b008-046f82d23e17)
 
 
 The 100% accuracy solution is presented in folder [folder](traffic-light-detection).
