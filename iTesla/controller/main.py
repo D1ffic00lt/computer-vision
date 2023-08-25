@@ -2,11 +2,12 @@ import os
 import time
 import logging
 import warnings
-
 import cv2
 import numpy as np
 
-from typing import Any, Union, Tuple
+from typing import Any, Union
+
+from traffic_lights import TrafficLightDetector
 
 connect_pigpio = True
 
@@ -18,35 +19,60 @@ except ImportError:
 
 
 class Controller(object):
-    P = 0.35
-    D = 0.1
+    P = 0.38
+    D = 0.17
     ESC = 17
     STEER = 18
     ESCAPE = 27
-    STOP_LINE_PIXELS_COUNT = 10000000
-    ROAD_PIXELS_COUNT = 1600000
+    STOP_AT_THE_TRAFFIC_LINE = 19_000_000
+    THE_TRAFFIC_LINE_WITH_PEDESTRIAN_PIXELS_COUNT = 17_500_000
+    STOP_LINE_PIXELS_COUNT = 7_000_000
+    ROAD_PIXELS_COUNT = 2_300_000
     SIZE = (533, 300)
     RECT = np.float32([[0, SIZE[1]], [SIZE[0], SIZE[1]], [SIZE[0], 0], [0, 0]])
     TRAP = np.float32([[10, 299], [523, 299], [440, 200], [93, 200]])
     SRC_DRAW = np.array(TRAP, dtype=np.int32)
 
     def __init__(
-            self, camera: Union[str, int] = 0, speed: int = 1550,
+            self, detector_cfg_path: str, detector_weights_path: str,
+            camera: Union[str, int] = 0, speed: int = 1550,
             show_results: bool = False, control_car: bool = True,
             show_angel: bool = False, ignore_warnings: bool = False,
-            stop_before_stop_line: bool = False, stop_at_traffic_light: bool = True
+            stop_before_stop_line: bool = False, stop_at_traffic_light: bool = True,
+            roads: list = None, do_count: bool = False, to_left: bool = False,
+            stop_in_front_of_pedestrians: bool = False, stop_line_stop_time: int = 5
     ) -> None:
         self.pi: Any = object()
+        self.crossroads_count = 0
+        self.model = TrafficLightDetector(detector_weights_path, detector_cfg_path)
         self.speed = speed
+        self.do_count = do_count
+        self.to_left = to_left
+        self.show_angel = show_angel
+        self.show_results = show_results
+        self.stop_line_stop_time = stop_line_stop_time
+        self.stop_before_stop_line = stop_before_stop_line
+        self.stop_at_traffic_light = stop_at_traffic_light
+        self.stop_in_front_of_pedestrians = stop_in_front_of_pedestrians
+        self.control_car = control_car and connect_pigpio
+        self.roads = [] if roads is None else roads
+        self.crossroads_count = 0
+
+        if roads:
+            for road in enumerate(roads):
+                try:
+                    print(f"road: {road[0]} - {self.moves_count(cv2.imread(road[1]))}")
+                except AttributeError:
+                    print(f"road: {road[0]} - image not found")
+        if do_count:
+            index = int(input("Enter index: "))
+            self.max_count = self.moves_count(cv2.imread(roads[index]))
+        else:
+            self.max_count = float("inf")
+
         if connect_pigpio:
             self.pi = self.setup_gpio()
             self.control(90, 1500)
-
-        self.control_car = control_car and connect_pigpio
-        self.show_angel = show_angel
-        self.show_results = show_results
-        self.stop_before_stop_line = stop_before_stop_line
-        self.stop_at_traffic_light = stop_at_traffic_light
 
         self._angle = 90
         self._ignore_warnings: bool = False
@@ -55,6 +81,7 @@ class Controller(object):
         self._camera = cv2.VideoCapture(camera)
 
         self._in_crossroads = False
+        self._stop = False
 
     def setup_gpio(self) -> Any:
         os.system("sudo pigpiod")
@@ -77,7 +104,11 @@ class Controller(object):
         while key != self.ESCAPE:
             self.angel = 90
 
-            status, frame = self._camera.read()
+            if self._in_crossroads:
+                for i in range(5):  # ping fix
+                    status, frame = self._camera.read()
+            else:
+                status, frame = self._camera.read()
 
             if not status:
                 print("Video stream not available")
@@ -85,29 +116,68 @@ class Controller(object):
                 continue
 
             if self._in_crossroads:
+                # remove this "if" if the pedestrian stop doesn't work
                 if self.STOP_LINE_PIXELS_COUNT > \
                         self._read_frame(frame, return_only_pixels_count=True) > self.ROAD_PIXELS_COUNT:
                     self._in_crossroads = False
+
+                    self.crossroads_count += 1
+                    if self.crossroads_count == self.max_count:
+                        self.control(90, 1500)
                     continue
-                self.control(90)
+
+                if not self._stop:
+                    self.control(90)
+                continue
 
             previous_error = total_error
 
             hist, mid, left, right, total_error, stop_line = self._read_frame(frame)
 
-            if stop_line and self.control_car:
+            if stop_line:
                 self._in_crossroads = True
+
+                time.sleep(0.15)
+
+                if self.stop_in_front_of_pedestrians:
+                    pixels = self._read_frame(frame, return_only_pixels_count=True)
+
+                    if self.THE_TRAFFIC_LINE_WITH_PEDESTRIAN_PIXELS_COUNT < pixels < self.STOP_AT_THE_TRAFFIC_LINE:
+                        self.control(90)
+                        time.sleep(0.3)
+                        self._traffic_controller()
+                        self.control(90)
+                        time.sleep(0.2)
+                        self._stop = False
+                        self._in_crossroads = False
+                        continue
+
                 if self.stop_before_stop_line:
                     self.control(90, 1500)
+
                     if not self.stop_at_traffic_light:
-                        time.sleep(5)
+                        #  bad implementation...
+                        if self.to_left:
+                            self.control(90)
+                            time.sleep(0.3)
+                            self.control(110)
+                            time.sleep(2)
+                            continue
+
+                        time.sleep(self.stop_line_stop_time)
+
                         continue
+
+                    # ping fix
+                    for i in range(5):
+                        status, frame = self._camera.read()
+
                     self._traffic_lights_controller()
                 continue
 
             self.angel = self._calculate_angel(self.angel, total_error, previous_error)
 
-            if self.control_car:
+            if self.control_car and not self._in_crossroads:
                 self.control(self.angel)
 
             if self.show_results:
@@ -116,29 +186,54 @@ class Controller(object):
             if self.show_angel:
                 print(self.angel)
 
-    def _traffic_lights_controller(self):
-        total_light = "red"
-        all_predictions = []
+            if self.crossroads_count == self.max_count:
+                self.control(90)
 
-        while total_light != "green":
+                time.sleep(0.2)
+
+                self.control(90, 1500)
+                break
+
+            self.crossroads_count += 1
+
+    def _traffic_lights_controller(self):
+        total_light = False
+
+        while not total_light:
             status, frame = self._camera.read()
 
             if not status:
                 print("Video stream not available")
                 time.sleep(0.3)
                 continue
+            try:
+                total_light = self.model.check_traffic_color(frame)
+            except Exception as ex:
+                print(ex)
 
-            if len(all_predictions) != 0:
-                if all_predictions.count(None) / len(all_predictions) > 0.9:
-                    break
+    def _traffic_controller(self):
+        self._stop = True
 
-            detector_prediction = ...(frame)  # TODO: detector prediction
+        self.control(90, 1500)
 
-            if not detector_prediction:
-                all_predictions.append(None)
-            total_light = ...(detector_prediction)  # TODO: model prediction
+        total_light = False
 
-            all_predictions.append(None if not total_light else total_light)
+        while not total_light:
+            status, frame = self._camera.read()
+
+            if not status:
+                print("Video stream not available")
+                time.sleep(0.3)
+                continue
+            try:
+                pixels = self._read_frame(frame, return_only_pixels_count=True)
+
+                if pixels < self.STOP_LINE_PIXELS_COUNT / 2:
+                    total_light = True
+                if self.STOP_AT_THE_TRAFFIC_LINE > pixels > self.STOP_AT_THE_TRAFFIC_LINE:
+                    total_light = True
+            except Exception as ex:
+                print(ex)
 
     def _calculate_angel(self, angel, total_error, previous_error) -> int:
         return angel - int(self.P * (total_error + (total_error - previous_error) * self.D))
@@ -146,12 +241,12 @@ class Controller(object):
     def _read_frame(
             self, frame: np.ndarray, return_only_error: bool = False,
             return_only_pixels_count: bool = False
-    ) -> Tuple[np.ndarray, int, int, int, Union[int, float], bool]:
+    ) -> Any:
         stop_line = False
         img = cv2.resize(frame, self.SIZE)
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        binary = cv2.inRange(gray, 180, 255)
+        binary = cv2.inRange(gray, 220, 255)
 
         matrix_trans = cv2.getPerspectiveTransform(self.TRAP, self.RECT)
         perspective = cv2.warpPerspective(binary, matrix_trans, self.SIZE, flags=cv2.INTER_LINEAR)
@@ -181,10 +276,29 @@ class Controller(object):
         if return_only_pixels_count:
             return np.sum(perspective)
 
-        if np.sum(perspective) > 10000000:
+        if np.sum(perspective) > self.STOP_LINE_PIXELS_COUNT:
             stop_line = True
 
         return hist, mid, left, right, total_error, stop_line
+
+    @staticmethod
+    def moves_count(img: np.ndarray) -> int:
+        img = cv2.resize(img, (img.shape[1] // 2, img.shape[0] // 2))
+        first_image, second_image = img[:, :img.shape[1] // 2], img[:, img.shape[1] // 2:]
+        bin_data = [[(0, 17, 47), (59, 38, 255)], [(87, 17, 62), (255, 73, 64)]]
+
+        result = []
+
+        for i in bin_data:
+            lower, high = i
+            first_bin = cv2.inRange(first_image, lower, high)
+            second_bin = cv2.inRange(second_image, lower, high)
+
+            result.append([np.sum(first_bin), np.sum(second_bin)])
+
+        result = [i.index(max(i)) for i in result]
+
+        return 1 if result[0] != result[1] else 2
 
     @property
     def camera(self):
@@ -231,9 +345,18 @@ class Controller(object):
 
 
 if __name__ == "__main__":
-    controller = Controller("../output1280.avi")
-    controller.camera = "../output1280.avi"
+    controller = Controller(
+        detector_cfg_path="./yolov4-tiny-obj.cfg",
+        detector_weights_path="./yolov4-tiny-obj_best.weights",
+        roads=["./1.png", "./2.png", "./3.png", "./4.png", "./5.png"]
+    )
+
     controller.stop_at_traffic_light = False  # FIXME
-    controller.show_results = True
+    controller.stop_before_stop_line = True
+    controller.stop_in_front_of_pedestrians = True
+    controller.speed = 1550
+    controller.show_results = False
     controller.show_angel = True
+    controller.to_left = False
+    # controller.control_car = True
     controller()
