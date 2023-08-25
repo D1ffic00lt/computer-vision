@@ -35,3 +35,5 @@ Your task is to write a program for gesture recognition and integrate it into ai
 ### Eyes detection
 
 Your task is to write a program for blinking recognition and integrate it into aikar. A single blink indicates a turn of the wheels by 70, 90 and 110 degrees, a double blink indicates a stop and start of movement.
+
+### Aikar on the road (the task of the cup final)
