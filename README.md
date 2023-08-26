@@ -50,3 +50,7 @@ The solution is presented in folder [folder](hand-detection).
 The solution is presented in folder [folder](eyes-detection).
 
 ### Aikar on the road (the task of the cup final)
+
+> You need to "teach" akar to drive along the highway in a figure of eight, drive through intersections, stop at traffic lights, turn left and let pedestrians pass.
+
+The solution that took the first place is presented in the [folder](iTesla).
