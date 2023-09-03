@@ -46,15 +46,10 @@ class SimpleCnn(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        # print(x.shape)
         x = self.conv2(x)
-        # print(x.shape)
         x = self.conv3(x)
-        # print(x.shape)
         x = self.conv4(x)
-        # print(x.shape)
         x = self.conv5(x)
-        # print(x.shape)
         x = self.flat(x)
         x = x.view(x.size(0), -1)
         logits = self.out(x)

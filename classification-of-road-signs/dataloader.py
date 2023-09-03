@@ -15,10 +15,9 @@ class ImagesDataset(Dataset):
 
     def __getitem__(self, index):
         transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Resize(size=(self.RESCALE_SIZE, self.RESCALE_SIZE)),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-
-            ])
+            transforms.ToTensor(),
+            transforms.Resize(size=(self.RESCALE_SIZE, self.RESCALE_SIZE)),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
         x = transform(self.file)
         return x
