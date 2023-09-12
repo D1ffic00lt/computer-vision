@@ -69,7 +69,6 @@ while key != ESCAPE:
         # cv2.imshow("binary", binary)
         matrix_trans = cv2.getPerspectiveTransform(TRAP, RECT)
         perspective = cv2.warpPerspective(binary, matrix_trans, SIZE, flags=cv2.INTER_LINEAR)
-        cv2.imwrite("./1.png", perspective)
         # trap_visual = cv2.drawContours(binary.copy(), [src_draw], -1, 150, thickness=3)
         # cv2.imshow("trap_vis", trap_visual)
         # cv2.imshow("perspective", perspective)
@@ -81,7 +80,6 @@ while key != ESCAPE:
 
         # cv2.line(perspective, (left, 0), (left, SIZE[1]), 50, 2)
         # cv2.line(perspective, (right, 0), (right, SIZE[1]), 50, 2)
-        # print(((left + right) // 2, 0), ((left + right) // 2, SIZE[1]))
         # cv2.line(perspective, (200, 0), (200, SIZE[1]), (255, 0, 0), 2)
         if (left + right) // 2 < 160:
             angle = 70
@@ -92,7 +90,6 @@ while key != ESCAPE:
         # cv2.line(perspective, (300, 0), (300, SIZE[1]), (255, 0, 0), 2)
         # cv2.line(perspective, ((left + right) // 2, 0), ((left + right) // 2, SIZE[1]), 110, 3)
         # cv2.imshow('lines', perspective)
-        print(angle)
         control(pi, ESC, 1570, STEER, angle)
     else:
         print("End of Video")

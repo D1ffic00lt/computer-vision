@@ -347,8 +347,7 @@ class Controller(object):
 if __name__ == "__main__":
     controller = Controller(
         detector_cfg_path="./yolov4-tiny-obj.cfg",
-        detector_weights_path="./yolov4-tiny-obj_best.weights",
-        roads=["./1.png", "./2.png", "./3.png", "./4.png", "./5.png"]
+        detector_weights_path="./yolov4-tiny-obj_best.weights"
     )
 
     controller.stop_at_traffic_light = False  # FIXME

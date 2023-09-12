@@ -29,7 +29,6 @@ class TrafficLightDetector(object):
         return bbox
 
     def check_traffic_color(self, frame):
-
         box = self.detect(frame)
 
         x, y, w, h = box
